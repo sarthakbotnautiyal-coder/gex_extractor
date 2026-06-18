@@ -1,0 +1,16 @@
+gex_extractor:
+  log_path: "logs"
+  db_path: "data/gex.db"
+  discord_channel_id: "1027647733219209227"
+  min_poll_interval: 60        # seconds
+  max_poll_interval: 300       # seconds
+  market_hours:
+    start: "09:30"             # ET
+    end: "16:00"               # ET
+
+supabase:
+  enabled: true
+  dual_write: true
+  retry_policy:
+    max_retries: 3
+    backoff_seconds: 5
