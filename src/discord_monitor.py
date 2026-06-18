@@ -71,10 +71,10 @@ def parse_gex_message(content: str) -> Optional[dict]:
 
 
 def is_within_time_window() -> bool:
-    """Check if current time is within market hours (EST)."""
-    now = datetime.datetime.now(datetime.timezone.utc).astimezone(
-        datetime.timezone(datetime.timedelta(hours=-4))
-    )
+    """Check if current time is within market hours (EST/EDT, handles DST)."""
+    from dateutil import tz
+    eastern = tz.gettz('America/New_York')
+    now = datetime.datetime.now(eastern)
     current = now.time()
     start = datetime.time(START_HOUR, START_MIN)
     end = datetime.time(END_HOUR, END_MIN)
