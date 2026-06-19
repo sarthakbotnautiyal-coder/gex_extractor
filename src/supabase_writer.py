@@ -91,7 +91,7 @@ class SupabaseGexWriter:
         try:
             client = self._get_client()
             client.schema(CLOUD_SCHEMA).table(CLOUD_TABLE).insert(cloud_row).execute()
-            logger.debug("[gex_writer] wrote snapshot local_id=%s ts=%s",
+            logger.info("[gex_writer] wrote snapshot local_id=%s ts=%s",
                         local_id, cloud_row.get("snapshot_timestamp"))
             return True
         except Exception as e:
