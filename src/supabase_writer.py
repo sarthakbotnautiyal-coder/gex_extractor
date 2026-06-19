@@ -18,7 +18,8 @@ except ImportError:
     Client = None
     create_client = None
 
-logger = logging.getLogger(__name__)
+from .log_setup import get_logger as _get_logger
+logger = _get_logger("gex_extractor")
 
 CLOUD_SCHEMA = "trading"
 CLOUD_TABLE = "gex_snapshots"
