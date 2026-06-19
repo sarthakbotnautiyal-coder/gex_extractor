@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
 """GEX Extractor - Discord GEX polling service."""
 
+import os
 import signal
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent / "src"))
+# Run as `python -m src.discord_monitor` from project root — handled by main()
+PROJECT_ROOT = Path(__file__).parent.resolve()
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from discord_monitor import GexMonitor
-from log_setup import get_logger
+# Load .env so os.environ gets the tokens
+try:
+    from dotenv import load_dotenv
+    load_dotenv(PROJECT_ROOT / ".env")
+except ImportError:
+    pass
+
+from src.log_setup import get_logger
+from src.discord_monitor import GexMonitor
 
 log = get_logger("gex_extractor")
 
