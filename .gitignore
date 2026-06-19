@@ -47,6 +47,7 @@ data/
 *.db
 *.db-shm
 *.db-wal
+*.db-journal
 
 # OS
 .DS_Store
@@ -56,3 +57,13 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Workspace bootstrap files (leak from subagent workspaces — never commit these)
+.openclaw/
+AGENTS.md
+HEARTBEAT.md
+IDENTITY.md
+SOUL.md
+TOOLS.md
+USER.md
+memory/
