@@ -73,12 +73,12 @@ def test_supabase_success_log_is_info_not_debug(
 
 def test_log_setup_creates_date_prefixed_file(tmp_logs_dir) -> None:
     """get_logger(name) must create logs/<name>.YYYY-MM-DD.log."""
-    from src.log_setup import _utc_date_str, get_logger
+    from src.log_setup import _et_date_str, get_logger
 
     name = "gex_extractor_smoke"
     log = get_logger(name, log_dir=str(tmp_logs_dir))
 
-    expected = tmp_logs_dir / f"{name}.{_utc_date_str()}.log"
+    expected = tmp_logs_dir / f"{name}.{_et_date_str()}.log"
     assert expected.exists(), f"Expected log file {expected} to exist"
 
     # Handlers on a freshly-fetched logger: exactly one FileHandler.
@@ -122,7 +122,7 @@ def test_log_setup_handler_swaps_on_date_rollover(
 
     # Pretend we crossed UTC midnight into "tomorrow".
     tomorrow = "2099-01-01"
-    monkeypatch.setattr(log_setup_mod, "_utc_date_str", lambda: tomorrow)
+    monkeypatch.setattr(log_setup_mod, "_et_date_str", lambda: tomorrow)
 
     log2 = get_logger(name, log_dir=str(tmp_logs_dir))
     assert log2 is log
@@ -169,7 +169,7 @@ def test_log_setup_handles_unresolvable_baseFilename(tmp_logs_dir, monkeypatch) 
 
     monkeypatch.setattr(Path, "resolve", boom)
     monkeypatch.setattr(
-        log_setup_mod, "_utc_date_str", lambda: "2099-12-31"
+        log_setup_mod, "_et_date_str", lambda: "2099-12-31"
     )
 
     # Should NOT raise — the except-branch reinstalls a fresh handler.

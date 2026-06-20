@@ -3,6 +3,11 @@
 import sqlite3
 import datetime
 import os
+from zoneinfo import ZoneInfo
+
+# Trading timezone. received_at is stamped in Eastern wall-clock so it lines up
+# with the gex.bot `timestamp` (also ET) instead of being recorded in UTC.
+_ET = ZoneInfo("America/New_York")
 
 
 def init_db(db_path: str) -> None:
@@ -43,7 +48,7 @@ def save_gex(conn: sqlite3.Connection, parsed: dict, raw: str) -> int | None:
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             parsed.get("timestamp"),
-            datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+            datetime.datetime.now(_ET).strftime("%Y-%m-%d %H:%M:%S"),
             parsed.get("gex_by_oi"),
             parsed.get("gex_by_volume"),
             parsed.get("spot"),

@@ -7,10 +7,14 @@ import random
 import os
 import re
 import sqlite3
+from zoneinfo import ZoneInfo
 from typing import Optional
 
 from .db_writer import init_db, save_gex
 from .log_setup import get_logger
+
+# Trading timezone — ZoneInfo handles EST/EDT (DST) automatically.
+_EASTERN = ZoneInfo("America/New_York")
 
 log = get_logger("gex_extractor")
 
@@ -72,9 +76,7 @@ def parse_gex_message(content: str) -> Optional[dict]:
 
 def is_within_time_window() -> bool:
     """Check if current time is within market hours (EST/EDT, handles DST)."""
-    from dateutil import tz
-    eastern = tz.gettz('America/New_York')
-    now = datetime.datetime.now(eastern)
+    now = datetime.datetime.now(_EASTERN)
     current = now.time()
     start = datetime.time(START_HOUR, START_MIN)
     end = datetime.time(END_HOUR, END_MIN)
@@ -99,7 +101,7 @@ class GexMonitor:
             from .supabase_writer import get_writer
             row = {
                 "timestamp": parsed.get("timestamp"),
-                "received_at": datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+                "received_at": datetime.datetime.now(_EASTERN).strftime("%Y-%m-%d %H:%M:%S"),
                 "gex_by_oi": parsed.get("gex_by_oi"),
                 "gex_by_volume": parsed.get("gex_by_volume"),
                 "spot": parsed.get("spot"),
@@ -199,9 +201,10 @@ class GexMonitor:
                     log.info(f"Next check in {sleep_time/60:.1f} minutes")
                     time.sleep(sleep_time)
                 else:
-                    now = datetime.datetime.now(datetime.timezone.utc).astimezone(
-                        datetime.timezone(datetime.timedelta(hours=-4))
-                    )
+                    # America/New_York handles EST/EDT automatically, so the
+                    # "sleep until tomorrow's open" math is correct year-round
+                    # (the old fixed -04:00 was an hour off in winter).
+                    now = datetime.datetime.now(_EASTERN)
                     next_start = (now + datetime.timedelta(days=1)).replace(
                         hour=START_HOUR, minute=START_MIN, second=0, microsecond=0
                     )

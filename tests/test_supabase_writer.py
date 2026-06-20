@@ -39,8 +39,11 @@ def test_normalize_timestamp_passes_through_iso() -> None:
 
 
 def test_normalize_timestamp_converts_naive_to_iso() -> None:
+    # Naive values are ET wall-clock → America/New_York (DST-aware).
     assert sw._normalize_timestamp("2026-06-19 15:59:59") == \
-        "2026-06-19T15:59:59+00:00"
+        "2026-06-19T15:59:59-04:00"  # June → EDT
+    assert sw._normalize_timestamp("2026-01-19 15:59:59") == \
+        "2026-01-19T15:59:59-05:00"  # January → EST
 
 
 def test_normalize_timestamp_passes_through_garbage() -> None:
@@ -52,7 +55,7 @@ def test_to_cloud_row_maps_all_fields(sample_db_row: dict) -> None:
     cloud_row = sw._to_cloud_row(42, sample_db_row)
     assert cloud_row["raw_id_local"] == 42
     assert cloud_row["source"] == sw.GEX_SOURCE
-    assert cloud_row["snapshot_timestamp"] == "2026-06-19T15:59:59+00:00"
+    assert cloud_row["snapshot_timestamp"] == "2026-06-19T15:59:59-04:00"
     assert cloud_row["received_at"] is not None
     assert cloud_row["gex_by_oi"] == sample_db_row["gex_by_oi"]
     assert cloud_row["gex_by_volume"] == sample_db_row["gex_by_volume"]
@@ -94,8 +97,8 @@ def test_write_snapshot_calls_insert_with_cloud_row(
     cloud_row = insert_call.call_args[0][0]
     assert cloud_row["raw_id_local"] == 42
     assert cloud_row["source"] == "gex_bot"
-    # _normalize_timestamp converts "2026-06-19 15:59:59" -> ISO 8601 form.
-    assert cloud_row["snapshot_timestamp"] == "2026-06-19T15:59:59+00:00"
+    # _normalize_timestamp converts naive ET "2026-06-19 15:59:59" -> ISO 8601 EDT.
+    assert cloud_row["snapshot_timestamp"] == "2026-06-19T15:59:59-04:00"
     assert cloud_row["spot"] == sample_db_row["spot"]
 
 
