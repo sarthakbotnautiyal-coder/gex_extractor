@@ -7,10 +7,15 @@ import logging
 import os
 import threading
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from typing import Any, Optional
 
 from dotenv import load_dotenv
+
+# Trading timezone — naive local timestamps are Eastern wall-clock (gex.bot
+# body + extractor received_at), so they localize to America/New_York (DST-aware).
+_ET = ZoneInfo("America/New_York")
 
 try:
     from supabase import Client, create_client
@@ -31,7 +36,11 @@ _writer_instance: "SupabaseGexWriter | None" = None
 
 
 def _normalize_timestamp(value: str | None) -> str | None:
-    """Normalize a local timestamp to ISO 8601 with offset."""
+    """Normalize a local timestamp to ISO 8601 with the Eastern offset.
+
+    Naive "YYYY-MM-DD HH:MM:SS" values are ET wall-clock, so they localize to
+    America/New_York (-04:00 in summer, -05:00 in winter) rather than UTC.
+    """
     if value is None:
         return None
     s = value.strip()
@@ -40,7 +49,7 @@ def _normalize_timestamp(value: str | None) -> str | None:
     if "T" in s and ("Z" in s or "+" in s[10:] or s.count("-") > 2):
         return s
     try:
-        dt = datetime.strptime(s, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+        dt = datetime.strptime(s, "%Y-%m-%d %H:%M:%S").replace(tzinfo=_ET)
         return dt.isoformat()
     except ValueError:
         return s
@@ -105,7 +114,7 @@ class SupabaseGexWriter:
         try:
             PENDING_WRITES_PATH.parent.mkdir(parents=True, exist_ok=True)
             entry = {
-                "ts": datetime.now(timezone.utc).isoformat(),
+                "ts": datetime.now(_ET).isoformat(),
                 "local_id": int(local_id),
                 "row": dict(row),
                 "error": error,
