@@ -37,6 +37,19 @@ python run.py
 
 Logs are written to `logs/gex_extractor.log` and GEX data is stored in `data/gex.db`.
 
+## Cron / lifecycle (production)
+
+Production cadence is **single-instruction** (watchdog-only). The shared
+`extractor-watchdog.sh` (also covers `premium_extractor`) fires every 5
+minutes during the trading day and is responsible for **both** cold-start at
+market open and post-crash recovery. There is no separate START line — only
+one cron instruction can ever start the extractor, which makes the lifecycle
+structurally race-free.
+
+> See [`docs/CRON.md`](docs/CRON.md) for the canonical crontab reference,
+> cold-start timing analysis, and the one-time host crontab edit command.
+> The crontab itself lives on the host, not in this repo.
+
 ## Database
 
 The GEX snapshots are stored in SQLite with the following schema:
